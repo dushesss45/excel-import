@@ -1,0 +1,119 @@
+openapi: 3.0.0
+info:
+  title: API для работы с Excel-файлами и данными
+  description: API предоставляет функционал загрузки Excel-файлов, их обработки и получения сгруппированных записей.
+  version: "1.0.1"
+servers:
+  - url: http://localhost:8080
+    description: Локальный сервер
+
+components:
+  securitySchemes:
+    BasicAuth:
+      type: http
+      scheme: basic
+
+security:
+  - BasicAuth: []
+
+paths:
+  /upload-form:
+    get:
+      summary: Получить форму загрузки Excel-файла
+      description: Возвращает HTML-страницу с формой для загрузки Excel-файла.
+      security:
+        - BasicAuth: []
+      responses:
+        '200':
+          description: HTML-страница с формой загрузки
+          content:
+            text/html:
+              schema:
+                type: string
+
+  /upload-excel:
+    post:
+      summary: Загрузить Excel-файл
+      description: Загрузка Excel-файла для дальнейшей обработки.
+      security:
+        - BasicAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: Excel-файл для загрузки.
+      responses:
+        '200':
+          description: Успешная загрузка файла
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    description: Статус операции.
+                    example: success
+                  message:
+                    type: string
+                    description: Сообщение о результате операции.
+                    example: Файл отправлен на импорт.
+        '422':
+          description: Ошибка валидации
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: Сообщение об ошибке.
+                  errors:
+                    type: object
+                    properties:
+                      file:
+                        type: array
+                        items:
+                          type: string
+                          description: Список ошибок для поля file.
+
+  /rows:
+    get:
+      summary: Получить сгруппированные данные
+      description: Возвращает данные, сгруппированные по дате.
+      responses:
+        '200':
+          description: Успешный ответ с данными
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      excel_id:
+                        type: integer
+                        description: ID записи из Excel.
+                      name:
+                        type: string
+                        description: Имя.
+                      date:
+                        type: string
+                        format: date
+                        description: Дата в формате "дд.мм.гггг".
+
+  /api-docs:
+    get:
+      summary: Переадресация на Swagger UI
+      description: Редирект на интерфейс Swagger UI.
+      responses:
+        '302':
+          description: Успешная переадресация
